@@ -7,6 +7,7 @@ def k_button(text: str):
     return types.KeyboardButton(text=text)
 
 
+# ////////////////////////////////////////////////////////////////////////////////////////
 def start_keyboard():
     kb = [
         [k_button('Ударения'), k_button('Задания')],
@@ -30,6 +31,8 @@ def accent_keyboard(user_id):
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
 
+
+# ////////////////////////////////////////////////////////////////////////////////////////
 
 def start_admin_keybord():
     kb = [[k_button('Добавить задание'), k_button('Забанить'), k_button('Объявления')],

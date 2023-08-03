@@ -11,7 +11,8 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config_bot.bot_token.get_secret_value())
 dp = Dispatcher(bot)
 
-users_location = {}
+with open("users_data/current_user_location.json", encoding='UTF-8') as f:
+    users_location = json.load(f)
 
 
 # ----------------------------------------------------------------------------------
@@ -37,7 +38,7 @@ async def accent(message: types.Message):
                          reply_markup=accent_keyboard(message.from_user.id))
 
 
-@dp.message_handler(lambda message: message.text in ['Вернуться 👈', 'В главное меню'])
+@dp.message_handler(lambda message: message.text in ['Вернуться 👈', 'в главное меню'])
 async def return_to_main_menu(message: types.Message):
     users_location[message.from_user.id] = 'main_menu'
     await message.answer("Вы в главном меню.",
@@ -52,6 +53,7 @@ async def edit_sutents_task(message: types.Message):
     await message.answer("Вы в мастерской заданий.",
                          reply_markup=task_admin_keyboard())
 
+
 @dp.message_handler(lambda message: message.text == 'Добавить задание/изменить 4' and \
                                     users_location[message.from_user.id] == 'admin_menu')
 async def edit_task_4(message: types.Message):
@@ -61,10 +63,11 @@ async def edit_task_4(message: types.Message):
         counter = 0
         for words in accents:
             text += (f"{counter + 1}) Верное слово: {words['correct word']}\n"
-                     f"Неверное: {words['incorrect word']}\n")
+                     f"\t    Неверное: {words['incorrect word']}\n\n")
             counter += 1
     await message.answer(f"Список ударений: \n{text}",
                          reply_markup=back_to_admin_menu())
+
 
 @dp.message_handler(lambda message: message.text == 'Вернуться в меню админа 👈' and \
                                     users_location[message.from_user.id] == 'admin_menu')
@@ -72,19 +75,34 @@ async def return_to_admin_menu(message: types.Message):
     await message.answer(f"Главное меню:",
                          reply_markup=start_admin_keybord())
 
+
 # --------------------------------------------------------------------------------
 @dp.message_handler(lambda message: users_location[message.from_user.id] == 'accent')
 async def get_user_accent(message: types.Message):
-    correct_word = users_words[message.from_user.id]['correct_word']
-    current_num = users_words[message.from_user.id]['current_num']
+    correct_word = users_accent_words[message.from_user.id]['correct_word']
+    incorrect_word = users_accent_words[message.from_user.id]['incorrect_word']
+    current_num = users_accent_words[message.from_user.id]['current_num']
     if message.text == correct_word:
         give_new_words_for_user(message.from_user.id, current_num)
         await message.answer("Верно!  ✅",
                              reply_markup=accent_keyboard(message.from_user.id))
-    else:
+    elif message.text == incorrect_word:
         await message.answer("Неверно =(   ❌",
                              reply_markup=start_keyboard())
 
 
+# --------------------------------------------------------------------------------
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    try:
+        executor.start_polling(dp, skip_updates=True)
+    finally:
+        # saving all current data
+        try:
+            with open('users_data/current_user_location.json', 'w+') as f:
+                json.dump(users_location, f)
+            with open('users_data/current_user_accents.json', 'w+') as f:
+                json.dump(users_accent_words, f)
+            print('Data has been written successfully')
+        except Exception as error:
+            print(f'Data has been broken\n'
+                  f'{error}')
