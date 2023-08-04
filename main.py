@@ -11,8 +11,9 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config_bot.bot_token.get_secret_value())
 dp = Dispatcher(bot)
 
-with open("users_data/current_user_location.json", encoding='UTF-8') as f:
+with open("handlers/users_data/current_user_location.json", encoding='UTF-8') as f:
     users_location = json.load(f)
+
 
 
 # ----------------------------------------------------------------------------------
@@ -58,7 +59,7 @@ async def edit_sutents_task(message: types.Message):
                                     users_location[message.from_user.id] == 'admin_menu')
 async def edit_task_4(message: types.Message):
     text = """"""
-    with open("materials_for_studing/accents.json", encoding='UTF-8') as f:
+    with open("handlers/materials_for_studying/accents.json", encoding='UTF-8') as f:
         accents = json.load(f)
         counter = 0
         for words in accents:
@@ -79,9 +80,9 @@ async def return_to_admin_menu(message: types.Message):
 # --------------------------------------------------------------------------------
 @dp.message_handler(lambda message: users_location[message.from_user.id] == 'accent')
 async def get_user_accent(message: types.Message):
-    correct_word = users_accent_words[message.from_user.id]['correct_word']
-    incorrect_word = users_accent_words[message.from_user.id]['incorrect_word']
-    current_num = users_accent_words[message.from_user.id]['current_num']
+    correct_word = users_current_accent_words[message.from_user.id]['correct_word']
+    incorrect_word = users_current_accent_words[message.from_user.id]['incorrect_word']
+    current_num = users_current_accent_words[message.from_user.id]['current_num']
     if message.text == correct_word:
         give_new_words_for_user(message.from_user.id, current_num)
         await message.answer("Верно!  ✅",
@@ -98,11 +99,11 @@ if __name__ == "__main__":
     finally:
         # saving all current data
         try:
-            with open('users_data/current_user_location.json', 'w+') as f:
+            with open('handlers/users_data/current_user_location.json') as f:
                 json.dump(users_location, f)
-            with open('users_data/current_user_accents.json', 'w+') as f:
-                json.dump(users_accent_words, f)
+            with open('handlers/users_data/current_user_accents.json') as f:
+                json.dump(users_current_accent_words, f)
             print('Data has been written successfully')
         except Exception as error:
             print(f'Data has been broken\n'
-                  f'{error}')
+                  f'Error: {error}')

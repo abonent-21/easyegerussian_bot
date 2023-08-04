@@ -1,4 +1,4 @@
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import types
 from handlers.accent_handler import *
 from random import shuffle
 
