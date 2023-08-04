@@ -3,6 +3,7 @@ from config import config_bot
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 import os
+import datetime
 
 from keyborads import *
 from handlers.task_4_handler import *
@@ -13,7 +14,6 @@ bot = Bot(token=config_bot.bot_token.get_secret_value())
 dp = Dispatcher(bot)
 
 users_location = {}
-
 
 
 # ----------------------------------------------------------------------------------
@@ -58,10 +58,8 @@ async def edit_sutents_task(message: types.Message):
 @dp.callback_query_handler(text_startswith='edit_task')
 async def edit_task_4(callback: types.CallbackQuery):
     users_location[callback.from_user.id] = 'admin_edit_panel'
-
     num_of_task = callback.data.split('_')[-1]
     path = f'handlers/materials_for_studying/task_{num_of_task}/task_{num_of_task}.xlsx'
-    print(path, num_of_task)
     await callback.message.answer("Файл с заданиями:", reply_markup=back_to_admin_menu())
     if os.path.exists(path):
         with open(path, 'rb') as file:
@@ -69,7 +67,15 @@ async def edit_task_4(callback: types.CallbackQuery):
         await callback.message.answer("После редактирования отправте файл сюда 👇")
     else:
         await callback.message.answer("*файл отсутствует*")
+        await callback.message.answer("Новый файл можно отправить сюда 👇")
     await callback.answer()
+
+
+# ДЛЯ ПРОЛИСТЫВАНИЯ ЗАДАНИЙ У АДМИНА
+@dp.callback_query_handler(text_startswith='kb_edit')
+async def change_edit_line(callback: types.CallbackQuery):
+    await callback.message.edit_reply_markup(reply_markup=task_admin_keyboard(callback.data))
+
 
 @dp.message_handler(lambda message: message.text == 'Вернуться в меню админа 👈' and \
                                     users_location[message.from_user.id] in ['admin_menu', 'admin_edit_panel'])
@@ -79,12 +85,20 @@ async def return_to_admin_menu(message: types.Message):
                          reply_markup=start_admin_keybord())
 
 
-@dp.message_handler(content_types='document')
-def download_file(file: types.File):
-    print(file)
-    file_path = file.file_path
-    destination = r"C:\folder\file.txt"
-    destination_file = bot.download_file(file_path, destination)
+@dp.message_handler(content_types=types.ContentType.DOCUMENT)
+async def fileHandle(message: types.Message):
+    name, type_file = message.document.file_name.split('.')
+    if users_location[message.from_user.id] == 'admin_edit_panel':
+        await message.answer(f'Файл {name} отпрвлен на проверку, ждите подтверждение.')
+        path = os.path.abspath('requests_to_edit_file')
+        time = f'{datetime.datetime.now()}'
+        idx = time.rfind('.')
+        time = time[:idx].replace(':', '-')
+        destination = path + rf"\{name} ({time})_({message.from_user.id}).{type_file}"
+        print(destination)
+        await message.document.download(destination_file=destination)
+    else:
+        await message.answer(f'Здесь нельзя отпрвить файл.')
 
 
 # --------------------------------------------------------------------------------
@@ -102,11 +116,6 @@ async def get_user_accent(message: types.Message):
                              reply_markup=start_keyboard())
 
 
-
 # --------------------------------------------------------------------------------
 if __name__ == "__main__":
-    try:
-        executor.start_polling(dp, skip_updates=True)
-    finally:
-            print('Data has been written successfully')
-            print(f'Data has been broken\n')
+    executor.start_polling(dp, skip_updates=True)

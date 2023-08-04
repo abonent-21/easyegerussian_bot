@@ -43,11 +43,39 @@ def start_admin_keybord():
     return keyboard
 
 
-def task_admin_keyboard():
-    kb = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(1, 27):
-        kb.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
-    return kb
+def task_admin_keyboard(type_kb='kb_edit_1_5'):
+    kb_1_5 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(1, 6):
+        kb_1_5.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
+    kb_1_5.row(types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_6_11'))
+
+    kb_6_11 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(6, 12):
+        kb_6_11.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
+    kb_6_11.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_1_5'),
+                types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_16_21'))
+
+    kb_16_21 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(16, 22):
+        kb_16_21.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
+    kb_16_21.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_6_11'),
+                types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_22_26'))
+
+    kb_22_26 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(22, 27):
+        kb_22_26.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
+    kb_22_26.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_16_21'))
+
+    if type_kb == "kb_edit_1_5":
+        return kb_1_5
+    elif type_kb == "kb_edit_6_11":
+        return kb_6_11
+    elif type_kb == "kb_edit_16_21":
+        return kb_16_21
+    elif type_kb == "kb_edit_22_26":
+        return kb_22_26
+
+
 
 
 def back_to_admin_menu():
