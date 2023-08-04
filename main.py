@@ -2,17 +2,17 @@ import logging
 from config import config_bot
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
+import os
 
 from keyborads import *
-from handlers.accent_handler import *
+from handlers.task_4_handler import *
 
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=config_bot.bot_token.get_secret_value())
 dp = Dispatcher(bot)
 
-with open("handlers/users_data/current_user_location.json", encoding='UTF-8') as f:
-    users_location = json.load(f)
+users_location = {}
 
 
 
@@ -55,26 +55,36 @@ async def edit_sutents_task(message: types.Message):
                          reply_markup=task_admin_keyboard())
 
 
-@dp.message_handler(lambda message: message.text == 'Добавить задание/изменить 4' and \
-                                    users_location[message.from_user.id] == 'admin_menu')
-async def edit_task_4(message: types.Message):
-    text = """"""
-    with open("handlers/materials_for_studying/accents.json", encoding='UTF-8') as f:
-        accents = json.load(f)
-        counter = 0
-        for words in accents:
-            text += (f"{counter + 1}) Верное слово: {words['correct word']}\n"
-                     f"\t    Неверное: {words['incorrect word']}\n\n")
-            counter += 1
-    await message.answer(f"Список ударений: \n{text}",
-                         reply_markup=back_to_admin_menu())
+@dp.callback_query_handler(text_startswith='edit_task')
+async def edit_task_4(callback: types.CallbackQuery):
+    users_location[callback.from_user.id] = 'admin_edit_panel'
 
+    num_of_task = callback.data.split('_')[-1]
+    path = f'handlers/materials_for_studying/task_{num_of_task}/task_{num_of_task}.xlsx'
+    print(path, num_of_task)
+    await callback.message.answer("Файл с заданиями:", reply_markup=back_to_admin_menu())
+    if os.path.exists(path):
+        with open(path, 'rb') as file:
+            await callback.message.answer_document(file)
+        await callback.message.answer("После редактирования отправте файл сюда 👇")
+    else:
+        await callback.message.answer("*файл отсутствует*")
+    await callback.answer()
 
 @dp.message_handler(lambda message: message.text == 'Вернуться в меню админа 👈' and \
-                                    users_location[message.from_user.id] == 'admin_menu')
+                                    users_location[message.from_user.id] in ['admin_menu', 'admin_edit_panel'])
 async def return_to_admin_menu(message: types.Message):
+    users_location[message.from_user.id] = 'admin_menu'
     await message.answer(f"Главное меню:",
                          reply_markup=start_admin_keybord())
+
+
+@dp.message_handler(content_types='document')
+def download_file(file: types.File):
+    print(file)
+    file_path = file.file_path
+    destination = r"C:\folder\file.txt"
+    destination_file = bot.download_file(file_path, destination)
 
 
 # --------------------------------------------------------------------------------
@@ -92,18 +102,11 @@ async def get_user_accent(message: types.Message):
                              reply_markup=start_keyboard())
 
 
+
 # --------------------------------------------------------------------------------
 if __name__ == "__main__":
     try:
         executor.start_polling(dp, skip_updates=True)
     finally:
-        # saving all current data
-        try:
-            with open('handlers/users_data/current_user_location.json') as f:
-                json.dump(users_location, f)
-            with open('handlers/users_data/current_user_accents.json') as f:
-                json.dump(users_current_accent_words, f)
             print('Data has been written successfully')
-        except Exception as error:
-            print(f'Data has been broken\n'
-                  f'Error: {error}')
+            print(f'Data has been broken\n')

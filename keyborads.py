@@ -1,10 +1,12 @@
 from aiogram import types
-from handlers.accent_handler import *
+from handlers.task_4_handler import *
 from random import shuffle
 
 
 def k_button(text: str):
     return types.KeyboardButton(text=text)
+
+
 
 
 # ////////////////////////////////////////////////////////////////////////////////////////
@@ -42,16 +44,15 @@ def start_admin_keybord():
 
 
 def task_admin_keyboard():
-    kb = [[k_button('Добавить задание/изменить 1')],
-          [k_button('Добавить задание/изменить 2')],
-          [k_button('Добавить задание/изменить 3')],
-          [k_button('Добавить задание/изменить 4')],
-          [k_button('Добавить задание/изменить 5')]]
-    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
-    return keyboard
+    kb = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(1, 27):
+        kb.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
+    return kb
 
 
 def back_to_admin_menu():
     kb = [[k_button('Вернуться в меню админа 👈')]]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
+
+
