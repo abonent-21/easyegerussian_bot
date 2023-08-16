@@ -2,9 +2,8 @@ import handlers.excel_handler
 
 users_current_task_4_words = {}
 
-
 def get_task_4_words_from_excel():
-    return handlers.excel_handler.get_task_4_words_from_excel()
+    return handlers.excel_handler.get_tasks_4_problems_from_excel()
 
 
 def check_id_in_list(user_id):

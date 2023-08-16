@@ -1,5 +1,5 @@
 from aiogram import types
-from handlers.task_4_handler import *
+from main import users_data
 from random import shuffle
 
 
@@ -20,11 +20,8 @@ def start_keyboard():
 
 
 def task_4_keyboard(user_id):
-    if not check_id_in_list(user_id):
-        create_new_words_for_new_user(user_id)
-        words_user = get_words_user(user_id)
-    else:
-        words_user = get_words_user(user_id)
+    task_4 = user_id.get_task(4)
+    words_user = [task_4['correct_word'], task_4['incorrect_word']]
     shuffle(words_user)
     kb = [
         [k_button(words_user[0]), k_button(words_user[1])],
