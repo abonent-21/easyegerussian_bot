@@ -1,15 +1,42 @@
 import sqlite3
-import handlers.task_4_handler
+import users
+from pprint import pprint
 
 
-
-
-def get_users_location():
+def get_users_class_data_from_db():
     conn = sqlite3.connect('handlers\\users_data\\current_users_data.db')
     cur = conn.cursor()
-    users_location = {}
     cur.execute("""SELECT * FROM users_location""")
     data = cur.fetchall()
-    for i in data:
-        users_location[i[0]] = i[1]
-    return users_location
+    users_dict = {}
+    for user in data:
+        user_id = user[0]
+        chat_user_id = user[1]
+        location = user[2]
+        users_dict[user_id] = users.User(user_id=user_id, chat_id=chat_user_id, location=location)
+    conn.commit()
+    conn.close()
+    return users_dict
+
+
+def get_from_db_current_num_of_user_task(user_id: int):
+    conn = sqlite3.connect('handlers\\users_data\\current_users_data.db')
+    cur = conn.cursor()
+    cur.execute("""SELECT * FROM users_tasks WHERE user_id = ?""", (user_id,))
+    data = cur.fetchall()[0][1:]
+    names_of_tasks = list(map(lambda x: x[0], cur.description))[1:]
+    nums_of_current_tasks = {}
+    if data:
+        for idx in range(len(data)):
+            nums_of_current_tasks[names_of_tasks[idx]] = data[idx]
+    else:
+        for i in range(1, 27):
+            nums_of_current_tasks[f'task_{i}'] = 0
+    conn.commit()
+    conn.close()
+    return nums_of_current_tasks
+
+
+def get_from_db_status_of_subscription(user_id):
+    pass
+

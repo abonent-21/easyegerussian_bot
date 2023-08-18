@@ -1,12 +1,10 @@
 from aiogram import types
-from main import users_data
+from users import User
 from random import shuffle
 
 
 def k_button(text: str):
     return types.KeyboardButton(text=text)
-
-
 
 
 # ////////////////////////////////////////////////////////////////////////////////////////
@@ -18,9 +16,22 @@ def start_keyboard():
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
 
+def check_correct_answer():
+    kb = types.InlineKeyboardMarkup(row_width=1, one_time_keyboard=True)
+    kb.add(types.InlineKeyboardButton(text=f'Посмотреть пояснение ', callback_data=f'show_correct_answer'))
+    return kb
 
-def task_4_keyboard(user_id):
-    task_4 = user_id.get_task(4)
+
+def back_to_start_keyboard():
+    kb = [
+        ['Вернуться 👈'],
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    return keyboard
+
+
+def task_4_keyboard(user: User):
+    task_4 = user.get_task_json(type_task=4)
     words_user = [task_4['correct_word'], task_4['incorrect_word']]
     shuffle(words_user)
     kb = [
@@ -29,6 +40,7 @@ def task_4_keyboard(user_id):
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
+
 
 def list_of_student_task(type_kb='kb_solve_1_5'):
     kb_1_5 = types.InlineKeyboardMarkup(row_width=1)
@@ -88,7 +100,7 @@ def task_admin_keyboard(type_kb='kb_edit_1_5'):
     for i in range(16, 22):
         kb_16_21.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
     kb_16_21.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_6_11'),
-                types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_22_26'))
+                 types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_22_26'))
 
     kb_22_26 = types.InlineKeyboardMarkup(row_width=1)
     for i in range(22, 27):
@@ -104,6 +116,7 @@ def task_admin_keyboard(type_kb='kb_edit_1_5'):
     elif type_kb == "kb_edit_22_26":
         return kb_22_26
 
+
 def yes_or_no_edit_file():
     kb = types.InlineKeyboardMarkup(row_width=2, one_time_keyboard=True)
     kb.add(types.InlineKeyboardButton(text=f'Да', callback_data=f'file_allow'),
@@ -115,5 +128,3 @@ def back_to_admin_menu():
     kb = [[k_button('Вернуться в меню админа 👈')]]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
-
-

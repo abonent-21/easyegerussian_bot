@@ -4,13 +4,13 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 import os
 import datetime
-import sqlite3
 import random
 import shutil
+import atexit
+
 
 import users
 from keyborads import *
-from handlers.task_4_handler import *
 import db
 
 logging.basicConfig(level=logging.INFO)
@@ -18,15 +18,14 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config_bot.bot_token.get_secret_value())
 dp = Dispatcher(bot)
 
-users_data = db.get_users_location()
+users_data = db.get_users_class_data_from_db()
 
 
 # -----------------COMMANDS--------------------------------------------------------------
 
 @dp.message_handler(commands='start')
 async def start_message(message: types.Message):
-    users_data[message.from_user.id] = users.User(message.from_user.id)
-    print(users_data[message.from_user.id].get_user_location())
+    users_data[message.from_user.id] = users.User(message.from_user.id, message.chat.id)
     await message.answer("Привет, я бот для подготовки к ЕГЭ!",
                          reply_markup=start_keyboard())
 
@@ -38,15 +37,38 @@ async def start_message(message: types.Message):
     await message.answer("Добро пожаловать, мастер!", reply_markup=start_admin_keybord())
 
 
+@dp.pre_shutdown()
+async def stop_message(dp):
+    for user_id in users_data:
+        users_data[user_id].save_all_current_data_in_db()
+        await bot.send_message(chat_id=users_data[user_id].get_user_chat_id(),
+                               text=f'Бот 🤖 ремонтируется ⚙️,\t'
+                                    f'приносим свои извинения.'
+                                    f'\nВаш прогресс сохранен 📝.')
+        await dp.storage.close()
+        await dp.storage.wait_closed()
+
+
+async def message_all_about_start(_):
+    for user_id in users_data:
+        await bot.send_message(chat_id=users_data[user_id].get_user_chat_id(),
+                               text=f'Бот 🤖 cнова работает 🦾 !')
+
+
 # -----------------USER MENU-------------------------------------------------------------
 # handler to user get to another handler
 @dp.callback_query_handler(text_startswith='solve_task')
 async def handler_for_users_task(callback: types.CallbackQuery):
     num_of_task = callback.data.split('_')[-1]
+    if num_of_task == '1':
+        users_data[callback.from_user.id].set_user_location('solve_task_1')
+        await callback.message.answer("Задание №4:", reply_markup=back_to_start_keyboard())
+        await callback.message.answer(users_data[callback.from_user.id].give_task_for_user_in_text(type_task=1))
+        await callback.message.answer("Введите ответ:")
     if num_of_task == '4':
         users_data[callback.from_user.id].set_user_location('solve_task_4')
-        await callback.message.answer("Задание на ударение:",
-                                      reply_markup=task_4_keyboard(callback.from_user.id))
+        await callback.message.answer("Задание №4:",
+                                      reply_markup=task_4_keyboard(user=users_data[callback.from_user.id]))
     await callback.answer()
 
 
@@ -86,7 +108,7 @@ async def edit_students_task(message: types.Message):
 @dp.callback_query_handler(text_startswith='edit_task')
 async def edit_task_4(callback: types.CallbackQuery):
     num_of_task = callback.data.split('_')[-1]
-    users_data[callback.from_user.id] = f'admin_edit_panel_{num_of_task}'
+    users_data[callback.from_user.id].set_user_location(f'admin_edit_panel_{num_of_task}')
     path = f'handlers/materials_for_studying/task_{num_of_task}/task_{num_of_task}.xlsx'
     await callback.message.answer("Файл с заданиями:", reply_markup=back_to_admin_menu())
     if os.path.exists(path):
@@ -110,39 +132,43 @@ async def change_edit_line(callback: types.CallbackQuery):
 @dp.callback_query_handler(text_startswith='file')
 async def allow_or_reject_file(callback: types.CallbackQuery):
     type_answer = callback.data.split('_')[-1]
-    message_code = int(callback.message.text.split()[-4])
+    code_of_file = int(callback.message.text.split()[-4])
     chatid = int(callback.message.text.split()[-1])
+    path = os.path.abspath('requests_to_edit_file')
+    name_file = ''
+    full_name_of_file = ''
+    date = ''
+    type_file = ''
+    for file in os.listdir(path):
+        if str(code_of_file) in file:
+            full_name_of_file = file
+            name_file = file[file.rfind(' ') + 1:].split('.')[0]
+            type_file = file[file.rfind(' ') + 1:].split('.')[1]
+            date = file[:file.find('_')].replace('(', '').replace(')', '')
+            break
     if type_answer == 'allow':
-        path = os.path.abspath('requests_to_edit_file')
-        name_file = ''
-        full_name_file = ''
-        date = ''
-        type_file = ''
-        for file in os.listdir(path):
-            if str(message_code) in file:
-                full_name_file = file
-                name_file = file[file.rfind(' ') + 1:].split('.')[0]
-                type_file = file[file.rfind(' ') + 1:].split('.')[1]
-                date = file[:file.find('_')].replace('(', '').replace(')', '')
-                break
         destination = os.path.abspath(f'handlers\\materials_for_studying\\{name_file}')
-        shutil.copy(path + "\\" + full_name_file, destination)
-        os.remove(path + "\\" + full_name_file)
+        shutil.copy(path + "\\" + full_name_of_file, destination)
+        os.remove(path + "\\" + full_name_of_file)
         os.remove(destination + "\\" + name_file + '.' + type_file)
-        old_file = os.path.join(destination, full_name_file)
+        old_file = os.path.join(destination, full_name_of_file)
         new_file = os.path.join(destination, name_file + '.' + type_file)
         os.rename(old_file, new_file)
+        for user in users_data.values():
+            user.set_new_tasks_in_keyboard_for_user()
         await bot.send_message(chat_id=chatid, text=f'Ваши изменения от {date} файла '
                                                     f'{name_file}.{type_file}  одобрены! ✅')
     elif type_answer == 'reject':
-        await bot.send_message(chat_id=chatid, text='Ваши изменения отклонены ❌')
+        await bot.send_message(chat_id=chatid, text='Ваши изменения отклонены ❌. '
+                                                    'Причину напишут вам в личных сообщениях.')
+        os.remove(path + '\\' + full_name_of_file)
     await callback.message.edit_reply_markup()
     await callback.answer()
 
 
 # button to return in admin menu
 @dp.message_handler(lambda message: message.text == 'Вернуться в меню админа 👈' \
-                                    and 'admin' in users_data[message.from_user.id].get_user_location)
+                                    and 'admin' in users_data[message.from_user.id].get_user_location())
 async def return_to_admin_menu(message: types.Message):
     users_data[message.from_user.id].set_user_location('admin_menu')
     await message.answer(f"Главное меню:",
@@ -153,11 +179,11 @@ async def return_to_admin_menu(message: types.Message):
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def fileHandle(message: types.Message):
     name, type_file = message.document.file_name.split('.')
-    num_of_task = users_data[message.from_user.id].get_user_location.split('_')[-1]
-    code = random.randint(100000, 999999)
-    if 'admin_edit_panel' not in users_data[message.from_user.id]:
+    num_of_task = users_data[message.from_user.id].get_user_location().split('_')[-1]
+    code = random.randint(1000000, 9999999)
+    if 'admin_edit_panel' not in users_data[message.from_user.id].get_user_location():
         await message.answer(f'Здесь нельзя отправить файл.')
-    if type_file != 'xlsx' or f'task_{num_of_task}' != name:
+    elif type_file != 'xlsx' or f'task_{num_of_task}' != name:
         await message.answer(f'Файл должен иметь то же название и тип.')
     elif message.caption:
         await message.answer(f'Файл {name}.{type_file} отпрвлен на проверку, ждите подтверждение.')
@@ -181,31 +207,35 @@ async def fileHandle(message: types.Message):
 
 # ---------------------CURRENT REQUESTS FROM USERS / HANDLERS FOR TASKS---------------------------------------------------------
 
+@dp.message_handler(lambda message: users_data[message.from_user.id].get_user_location() == 'solve_task_1')
+async def get_user_accent_task_4(message: types.Message):
+    if users_data[message.from_user.id].check_correct_answer(type_task=1, input_word=message.text):
+        users_data[message.from_user.id].change_num_of_current_task_for_user(type_task=1, step=1)
+        await message.answer("Верно!  ✅")
+        await message.answer(users_data[message.from_user.id].give_task_for_user_in_text(type_task=1))
+        await message.answer("Введите ответ:")
+    else:
+        users_data[message.from_user.id].set_user_location('main_menu')
+        await message.answer("Неверно =(   ❌",
+                             reply_markup=start_keyboard())
+        await message.answer("",
+                             reply_markup=start_keyboard())
+
 
 # check current users answers for task 4
-@dp.message_handler(lambda message: users_data[message.from_user.id].get_user_location == 'solve_task_4')
+@dp.message_handler(lambda message: users_data[message.from_user.id].get_user_location() == 'solve_task_4')
 async def get_user_accent_task_4(message: types.Message):
-
-    if message.text == correct_word:
-        give_new_words_for_user(message.from_user.id, current_num)
+    if users_data[message.from_user.id].check_correct_answer(type_task=4, input_word=message.text):
+        users_data[message.from_user.id].change_num_of_current_task_for_user(type_task=4, step=1)
         await message.answer("Верно!  ✅",
-                             reply_markup=task_4_keyboard(message.from_user.id))
-    elif message.text == incorrect_word:
+                             reply_markup=task_4_keyboard(user=users_data[message.from_user.id]))
+    else:
+        users_data[message.from_user.id].set_user_location('main_menu')
         await message.answer("Неверно =(   ❌",
                              reply_markup=start_keyboard())
 
 
 # --------------------------------------------------------------------------------
 if __name__ == "__main__":
-    try:
-        executor.start_polling(dp, skip_updates=True)
-    finally:
-        conn = sqlite3.connect('handlers\\users_data\\current_users_data.db')
-        cur = conn.cursor()
-        users_id = [i for i in db.get_users_location()]
-        for us in users_data:
-            if us in users_id:
-                cur.execute("update users_location set location=? where user_id=?", (users_data[us], us))
-            else:
-                cur.execute("INSERT INTO users_location (user_id, location) VALUES(?, ?);", (us, users_data[us]))
-        conn.commit()
+    executor.start_polling(dp, skip_updates=True, on_startup=message_all_about_start)
+
