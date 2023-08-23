@@ -9,26 +9,32 @@ class User:
         self.user_id = user_id
         self.chat_id = chat_id
         self.location = location
-        self.subscription = {'status': False, 'time_exp': None}
+        self.subscription = db.get_from_db_status_of_subscription(user_id)
         self.nums_of_current_tasks = db.get_from_db_current_num_of_user_task(user_id)
         self.task_1 = handlers.excel_handler.get_tasks_1_problems_from_excel()
         self.task_2 = None
         self.task_3 = None
         self.task_4 = handlers.excel_handler.get_tasks_4_problems_from_excel()
-        self.task_3 = None
+        self.task_5 = None
         self.all_tasks = [self.task_1, self.task_2, self.task_3, self.task_4]
 
     def get_user_location(self):
         return self.location
 
+    def get_dict_of_task(self, type, num):
+        return self.all_tasks[type - 1][num]
+
     def set_user_location(self, location: str):
         self.location = location
+
+    def get_num_of_current_tasks(self, type: int):
+        return self.nums_of_current_tasks[f'task_{type}']
 
     def get_status_of_subscription(self):
         return self.subscription
 
-    def set_subscription_status(self, status: bool, time_exp: str):
-        self.subscription = {'status': status, 'time_exp': time_exp}
+    def set_subscription_status(self, status: bool, time_start: str, time_exp: str):
+        self.subscription = {'status': status, 'time_start': time_start, 'time_exp': time_exp}
 
     def change_num_of_current_task_for_user(self, type_task: int, step: int):
         self.nums_of_current_tasks[f'task_{type_task}'] = \
@@ -54,7 +60,7 @@ class User:
             num_in_column = task['num_in_column']
             description = task['description']
             text_of_task = task['text_of_task']
-            text = 'Задание #' + num_in_column + "\n\n" + description \
+            text = 'Номер #' + num_in_column + "\n\n" + description \
                    + "\n\n" + text_of_task
             return text
 
@@ -73,6 +79,24 @@ class User:
         ''', (self.user_id, self.chat_id, self.location))
         cursor.execute(f'''
                 INSERT or REPLACE INTO  users_tasks VALUES ({qu});''', data)
+        connection.commit()
+        connection.close()
+
+        connection = sqlite3.connect('handlers\\users_data\\users.db')
+        cursor = connection.cursor()
+        sub_data = self.get_status_of_subscription()
+        status_subscription = sub_data['status']
+        start_subscription = str(sub_data['time_start'])
+        end_subscription = str(sub_data['time_exp'])
+        cursor.execute('''
+                INSERT or REPLACE  INTO users_subscription
+                                      (user_id, status, 
+                                      time_start, time_exp)
+                                      VALUES (?, ?, ?, ?);
+                ''', (self.user_id,
+                      status_subscription,
+                      start_subscription,
+                      end_subscription))
         connection.commit()
         connection.close()
 

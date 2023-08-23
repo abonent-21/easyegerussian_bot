@@ -17,5 +17,6 @@ def get_tasks_1_problems_from_excel(path=r'handlers\materials_for_studying\task_
     for row in ws.iter_rows(min_row=2, values_only=True):
         users_problems.append({'num_in_column': str(row[0]), 'description': str(row[1]), 'text_of_task': str(row[2]),
                                'correct_answers': str(row[3]), 'explanation': str(row[4]),
-                               'video_with_explanation': str(row[5]), 'number_of_theory': str(row[6])})
+                               'video_with_explanation': str(row[5]), 'time_code_of_video': str(row[6]),
+                               'number_of_theory': str(row[7])})
     return users_problems

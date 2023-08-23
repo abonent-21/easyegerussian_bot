@@ -11,14 +11,49 @@ def k_button(text: str):
 def start_keyboard():
     kb = [
         [k_button('Задания')],
-        [k_button('Cтатистика')], [k_button('Теория')]
+        [k_button('Теория')], [k_button('Доп. информация')]
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
 
-def check_correct_answer():
+
+def additional_information():
+    kb = [
+        [k_button('Статистика')],
+        [k_button('Подписка'), k_button('Статус подписки')],
+        ['Вернуться 👈']
+
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    return keyboard
+
+
+def price_list_of_sub():
+    kb = types.InlineKeyboardMarkup(row_width=1)
+    kb.add(types.InlineKeyboardButton(text=f'Пробная на 1 день',
+                                      callback_data=f'subscription_trial'))
+    kb.add(types.InlineKeyboardButton(text=f'На неделю 49 р',
+                                      callback_data=f'subscription_week') )
+    kb.add(types.InlineKeyboardButton(text=f'На месяц 99 р',
+                                      callback_data=f'subscription_month'))
+    kb.add(types.InlineKeyboardButton(text=f'На полгода 399 р',
+                                      callback_data=f'subscription_half_year'))
+    kb.add(types.InlineKeyboardButton(text=f'На год 599 р',
+                                      callback_data=f'subscription_year'))
+    return kb
+
+
+def check_correct_answer(type_task, num_of_task):
     kb = types.InlineKeyboardMarkup(row_width=1, one_time_keyboard=True)
-    kb.add(types.InlineKeyboardButton(text=f'Посмотреть пояснение ', callback_data=f'show_correct_answer'))
+    kb.add(types.InlineKeyboardButton(text=f'Пояснение',
+                                      callback_data=f'show_correct_answer {type_task}/{num_of_task}'))
+    return kb
+
+
+def send_to_buy_sub():
+    kb = types.InlineKeyboardMarkup(row_width=1, one_time_keyboard=True)
+    kb.add(types.InlineKeyboardButton(text=f'Активировать подписку 💸',
+                                      callback_data=f'buy_sub'))
     return kb
 
 

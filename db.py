@@ -38,5 +38,16 @@ def get_from_db_current_num_of_user_task(user_id: int):
 
 
 def get_from_db_status_of_subscription(user_id):
-    pass
-
+    conn = sqlite3.connect('handlers\\users_data\\users.db')
+    cur = conn.cursor()
+    cur.execute("""SELECT * FROM users_subscription WHERE user_id = ?""", (user_id,))
+    data = cur.fetchall()[0][1:]
+    names_of_tasks = list(map(lambda x: x[0], cur.description))[1:]
+    subscription = {}
+    if data:
+        for idx in range(len(data)):
+            subscription[names_of_tasks[idx]] = data[idx]
+    else:
+        subscription = {'status': False, 'time_start': None, 'time_exp': None}
+    print(subscription)
+    return subscription

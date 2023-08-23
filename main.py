@@ -8,7 +8,6 @@ import random
 import shutil
 import atexit
 
-
 import users
 from keyborads import *
 import db
@@ -33,26 +32,25 @@ async def start_message(message: types.Message):
 @dp.message_handler(commands='admin')
 async def start_message(message: types.Message):
     users_data[message.from_user.id].set_user_location('admin_menu')
-    users_data[message.from_user.id].set_subscription_status(status=True, time_exp='inf')
+    users_data[message.from_user.id].set_subscription_status(status=True,time_start='inf', time_exp='inf')
     await message.answer("Добро пожаловать, мастер!", reply_markup=start_admin_keybord())
 
 
-@dp.pre_shutdown()
-async def stop_message(dp):
+@dp.message_handler(commands='stop')
+async def stop_message(message: types.Message):
     for user_id in users_data:
         users_data[user_id].save_all_current_data_in_db()
         await bot.send_message(chat_id=users_data[user_id].get_user_chat_id(),
                                text=f'Бот 🤖 ремонтируется ⚙️,\t'
                                     f'приносим свои извинения.'
                                     f'\nВаш прогресс сохранен 📝.')
-        await dp.storage.close()
-        await dp.storage.wait_closed()
+        exit()
 
 
 async def message_all_about_start(_):
     for user_id in users_data:
         await bot.send_message(chat_id=users_data[user_id].get_user_chat_id(),
-                               text=f'Бот 🤖 cнова работает 🦾 !')
+                               text=f'Бот 🤖 cнова работает 🦾 !\nНажми --> /start')
 
 
 # -----------------USER MENU-------------------------------------------------------------
@@ -62,7 +60,7 @@ async def handler_for_users_task(callback: types.CallbackQuery):
     num_of_task = callback.data.split('_')[-1]
     if num_of_task == '1':
         users_data[callback.from_user.id].set_user_location('solve_task_1')
-        await callback.message.answer("Задание №4:", reply_markup=back_to_start_keyboard())
+        await callback.message.answer("Задание №1:", reply_markup=back_to_start_keyboard())
         await callback.message.answer(users_data[callback.from_user.id].give_task_for_user_in_text(type_task=1))
         await callback.message.answer("Введите ответ:")
     if num_of_task == '4':
@@ -79,6 +77,30 @@ async def list_of_tasks(message: types.Message):
                          reply_markup=list_of_student_task())
 
 
+@dp.message_handler(Text(equals='Доп. информация'))
+async def list_of_tasks(message: types.Message):
+    await message.answer("Дополнительная информация:",
+                         reply_markup=additional_information())
+
+
+@dp.message_handler(Text(equals='Подписка'))
+async def price_of_sub(message: types.Message):
+    await message.answer("Подписки:",
+                         reply_markup=price_list_of_sub())
+
+
+@dp.callback_query_handler(text_startswith='buy_sub')
+async def price_of_sub(callback: types.CallbackQuery):
+    await bot.send_message(callback.message.chat.id, 'Подписки',
+                           reply_markup=price_list_of_sub())
+    await callback.answer()
+
+
+@dp.message_handler(Text(equals='Статус подписки'))
+async def price_of_sub(message: types.Message):
+    sub_data = users_data[message.from_user.id].get_status_of_subscription()
+
+
 # handler for inline button to switch task in user menu
 @dp.callback_query_handler(text_startswith='kb_solve')
 async def kb_solve(callback: types.CallbackQuery):
@@ -92,6 +114,29 @@ async def return_to_main_menu(message: types.Message):
     users_data[message.from_user.id].set_user_location('main_menu')
     await message.answer("Вы в главном меню.",
                          reply_markup=start_keyboard())
+
+
+@dp.callback_query_handler(text_startswith='show_correct_answer')
+async def show_correct_answer(callback: types.CallbackQuery):
+    status_of_sub = users_data[callback.from_user.id].get_status_of_subscription()['status']
+    time_of_exp = users_data[callback.from_user.id].get_status_of_subscription()['time_exp']
+    type_and_num = callback.data.split()[-1].split('/')
+    type_of_task = int(type_and_num[0])
+    num_of_task = int(type_and_num[1])
+    if status_of_sub:
+        task = users_data[callback.from_user.id].get_dict_of_task(type_of_task, num_of_task)
+        await callback.message.answer('<i><b>Пояснение:</b></i>', parse_mode="HTML")
+        await callback.message.answer(task['explanation'])
+        await callback.message.answer('<i><b>Видео:</b></i>', parse_mode="HTML")
+        await callback.message.answer(task['video_with_explanation'])
+        await callback.message.answer('Тайм код: ' + task['time_code_of_video'])
+        await callback.message.answer('<i><b>Теория:</b></i>', parse_mode="HTML")
+        await callback.message.answer(task['number_of_theory'])
+    else:
+        await callback.message.answer('У вас не активирована подписка. Нажми 👇, чтобы активировать',
+                                      reply_markup=send_to_buy_sub())
+    await callback.answer()
+    await callback.message.edit_reply_markup()
 
 
 # -----------------ADMIN MENU--------------------------------------------------------------
@@ -208,7 +253,7 @@ async def fileHandle(message: types.Message):
 # ---------------------CURRENT REQUESTS FROM USERS / HANDLERS FOR TASKS---------------------------------------------------------
 
 @dp.message_handler(lambda message: users_data[message.from_user.id].get_user_location() == 'solve_task_1')
-async def get_user_accent_task_4(message: types.Message):
+async def get_user_accent_task_1(message: types.Message):
     if users_data[message.from_user.id].check_correct_answer(type_task=1, input_word=message.text):
         users_data[message.from_user.id].change_num_of_current_task_for_user(type_task=1, step=1)
         await message.answer("Верно!  ✅")
@@ -218,8 +263,9 @@ async def get_user_accent_task_4(message: types.Message):
         users_data[message.from_user.id].set_user_location('main_menu')
         await message.answer("Неверно =(   ❌",
                              reply_markup=start_keyboard())
-        await message.answer("",
-                             reply_markup=start_keyboard())
+        num = users_data[message.from_user.id].get_num_of_current_tasks(type=1)
+        await message.answer("Посмотреть ответ 👇",
+                             reply_markup=check_correct_answer(type_task=1, num_of_task=num))
 
 
 # check current users answers for task 4
@@ -233,9 +279,13 @@ async def get_user_accent_task_4(message: types.Message):
         users_data[message.from_user.id].set_user_location('main_menu')
         await message.answer("Неверно =(   ❌",
                              reply_markup=start_keyboard())
+        
 
 
 # --------------------------------------------------------------------------------
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True, on_startup=message_all_about_start)
-
+    try:
+        executor.start_polling(dp, skip_updates=True, on_startup=message_all_about_start)
+    finally:
+        for user_id in users_data:
+            users_data[user_id].save_all_current_data_in_db()
