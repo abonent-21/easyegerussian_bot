@@ -4,7 +4,7 @@ from os.path import abspath
 
 
 def get_users_class_data_from_db():
-    conn = sqlite3.connect(abspath('current_users_data.db'))
+    conn = sqlite3.connect('handlers/users_data/current_users_data.db')
     cur = conn.cursor()
     cur.execute("""SELECT * FROM users_location""")
     data = cur.fetchall()
@@ -20,7 +20,7 @@ def get_users_class_data_from_db():
 
 
 def get_from_db_current_num_of_user_task(user_id: int):
-    conn = sqlite3.connect(abspath('current_users_data.db'))
+    conn = sqlite3.connect('handlers/users_data/current_users_data.db')
     cur = conn.cursor()
     cur.execute("""SELECT * FROM users_tasks WHERE user_id = ?""", (user_id,))
     data = cur.fetchall()[0][1:]
@@ -38,7 +38,7 @@ def get_from_db_current_num_of_user_task(user_id: int):
 
 
 def get_from_db_status_of_subscription(user_id):
-    conn = sqlite3.connect(abspath('users.db'))
+    conn = sqlite3.connect('handlers/users_data/users.db')
     cur = conn.cursor()
     cur.execute("""SELECT * FROM users_subscription WHERE user_id = ?""", (user_id,))
     data = cur.fetchall()[0][1:]

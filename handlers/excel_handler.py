@@ -2,7 +2,7 @@ import openpyxl
 from os.path import abspath
 
 
-def get_tasks_4_problems_from_excel(path=abspath('task_4.xlsx')):
+def get_tasks_4_problems_from_excel(path='handlers/materials_for_studying/task_4/task_4.xlsx'):
     users_accents_word = []
     wb = openpyxl.load_workbook(path)
     ws = wb.active
