@@ -1,7 +1,8 @@
 import openpyxl
+from os.path import abspath
 
 
-def get_tasks_4_problems_from_excel(path=r'handlers\materials_for_studying\task_4\task_4.xlsx'):
+def get_tasks_4_problems_from_excel(path=abspath('task_4.xlsx')):
     users_accents_word = []
     wb = openpyxl.load_workbook(path)
     ws = wb.active
@@ -14,7 +15,7 @@ def get_tasks_problems_from_excel(number_of_task: int):
     try:
         if number_of_task == 4:
             return get_tasks_4_problems_from_excel()
-        path = rf'handlers\materials_for_studying\task_{number_of_task}\task_{number_of_task}.xlsx'
+        path = rf'handlers/materials_for_studying/task_{number_of_task}/task_{number_of_task}.xlsx'
         users_problems = []
         wb = openpyxl.load_workbook(path)
         ws = wb.active

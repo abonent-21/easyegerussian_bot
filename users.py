@@ -57,7 +57,7 @@ class User:
         return text
 
     def save_all_current_data_in_db(self):
-        connection = sqlite3.connect('handlers\\users_data\\current_users_data.db')
+        connection = sqlite3.connect('handlers/users_data/current_users_data.db')
         cursor = connection.cursor()
         data = [self.user_id]
         for i in range(1, 27):
@@ -74,7 +74,7 @@ class User:
         connection.commit()
         connection.close()
 
-        connection = sqlite3.connect('handlers\\users_data\\users.db')
+        connection = sqlite3.connect('handlers/users_data/users.db')
         cursor = connection.cursor()
         sub_data = self.get_status_of_subscription()
         status_subscription = sub_data['status']

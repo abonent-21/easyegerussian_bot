@@ -196,10 +196,10 @@ async def allow_or_reject_file(callback: types.CallbackQuery):
             date = file[:file.find('_')].replace('(', '').replace(')', '')
             break
     if type_answer == 'allow':
-        destination = os.path.abspath(f'handlers\\materials_for_studying\\{name_file}')
-        shutil.copy(path + "\\" + full_name_of_file, destination)
-        os.remove(path + "\\" + full_name_of_file)
-        os.remove(destination + "\\" + name_file + '.' + type_file)
+        destination = os.path.abspath(f'handlers/materials_for_studying/{name_file}')
+        shutil.copy(path + "/" + full_name_of_file, destination)
+        os.remove(path + "/" + full_name_of_file)
+        os.remove(destination + "/" + name_file + '.' + type_file)
         old_file = os.path.join(destination, full_name_of_file)
         new_file = os.path.join(destination, name_file + '.' + type_file)
         os.rename(old_file, new_file)
@@ -210,7 +210,7 @@ async def allow_or_reject_file(callback: types.CallbackQuery):
     elif type_answer == 'reject':
         await bot.send_message(chat_id=chatid, text='Ваши изменения отклонены ❌. '
                                                     'Причину напишут вам в личных сообщениях.')
-        os.remove(path + '\\' + full_name_of_file)
+        os.remove(path + '/' + full_name_of_file)
     await callback.message.edit_reply_markup()
     await callback.answer()
 
@@ -245,10 +245,10 @@ async def fileHandle(message: types.Message):
         time = f'{datetime.datetime.now()}'
         idx = time.rfind('.')
         time = time[:idx].replace(':', '-')
-        destination = path + rf"\({time})_({code}) {name}.{type_file}"
+        destination = path + rf"/({time})_({code}) {name}.{type_file}"
         await message.document.download(destination_file=destination)
         file = [f for f in os.listdir(path)][-1]
-        with open(path + "\\" + file, 'rb') as f:
+        with open(path + "/" + file, 'rb') as f:
             await bot.send_document(chat_id=-1001945133738, document=f)
     elif not message.caption:
         await message.answer(f'Необходимо описать изменения файла.')
