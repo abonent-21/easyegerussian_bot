@@ -25,16 +25,19 @@ users_data = db.get_users_class_data_from_db()
 @dp.message_handler(commands='start')
 async def start_message(message: types.Message):
     users_data[message.from_user.id] = users.User(message.from_user.id, message.chat.id)
-    await message.answer("Привет, я бот для подготовки к ЕГЭ!",
+    await message.answer("Привет, я бот для подготовки к ЕГЭ! (бета версия)",
                          reply_markup=start_keyboard())
 
 
-@dp.message_handler(commands='admin')
+@dp.message_handler(commands='admin1232')
 async def start_message(message: types.Message):
     users_data[message.from_user.id].set_user_location('admin_menu')
     users_data[message.from_user.id].set_subscription_status(status=True,time_start='inf', time_exp='inf')
     await message.answer("Добро пожаловать, мастер!", reply_markup=start_admin_keybord())
 
+@dp.message_handler(commands='stat')
+async def start_message(message: types.Message):
+    await message.answer("Добро пожаловать, мастер!", reply_markup=start_admin_keybord())
 
 @dp.message_handler(commands='stop')
 async def stop_message(message: types.Message):
@@ -58,10 +61,11 @@ async def message_all_about_start(_):
 @dp.callback_query_handler(text_startswith='solve_task')
 async def handler_for_users_task(callback: types.CallbackQuery):
     num_of_task = callback.data.split('_')[-1]
-    if num_of_task == '1':
-        users_data[callback.from_user.id].set_user_location('solve_task_1')
-        await callback.message.answer("Задание №1:", reply_markup=back_to_start_keyboard())
-        await callback.message.answer(users_data[callback.from_user.id].give_task_for_user_in_text(type_task=1))
+    if num_of_task != '4':
+        users_data[callback.from_user.id].set_user_location(f'solve_task_{num_of_task}')
+        await callback.message.answer(f"Задание №{num_of_task}:", reply_markup=back_to_start_keyboard())
+        await callback.message.answer(users_data[callback.from_user.id].give_task_for_user_in_text(
+            type_task=int(num_of_task)))
         await callback.message.answer("Введите ответ:")
     if num_of_task == '4':
         users_data[callback.from_user.id].set_user_location('solve_task_4')
@@ -253,7 +257,7 @@ async def fileHandle(message: types.Message):
 # ---------------------CURRENT REQUESTS FROM USERS / HANDLERS FOR TASKS---------------------------------------------------------
 
 @dp.message_handler(lambda message: users_data[message.from_user.id].get_user_location() == 'solve_task_1')
-async def get_user_accent_task_1(message: types.Message):
+async def get_user_task_1(message: types.Message):
     if users_data[message.from_user.id].check_correct_answer(type_task=1, input_word=message.text):
         users_data[message.from_user.id].change_num_of_current_task_for_user(type_task=1, step=1)
         await message.answer("Верно!  ✅")
@@ -263,14 +267,14 @@ async def get_user_accent_task_1(message: types.Message):
         users_data[message.from_user.id].set_user_location('main_menu')
         await message.answer("Неверно =(   ❌",
                              reply_markup=start_keyboard())
-        num = users_data[message.from_user.id].get_num_of_current_tasks(type=1)
+        num = users_data[message.from_user.id].get_num_of_current_tasks(type_of_task=1)
         await message.answer("Посмотреть ответ 👇",
                              reply_markup=check_correct_answer(type_task=1, num_of_task=num))
 
 
 # check current users answers for task 4
 @dp.message_handler(lambda message: users_data[message.from_user.id].get_user_location() == 'solve_task_4')
-async def get_user_accent_task_4(message: types.Message):
+async def get_user_task_4(message: types.Message):
     if users_data[message.from_user.id].check_correct_answer(type_task=4, input_word=message.text):
         users_data[message.from_user.id].change_num_of_current_task_for_user(type_task=4, step=1)
         await message.answer("Верно!  ✅",

@@ -1,6 +1,6 @@
 import handlers.excel_handler
 import sqlite3
-import datetime
+import os
 import db
 
 
@@ -11,24 +11,21 @@ class User:
         self.location = location
         self.subscription = db.get_from_db_status_of_subscription(user_id)
         self.nums_of_current_tasks = db.get_from_db_current_num_of_user_task(user_id)
-        self.task_1 = handlers.excel_handler.get_tasks_1_problems_from_excel()
-        self.task_2 = None
-        self.task_3 = None
-        self.task_4 = handlers.excel_handler.get_tasks_4_problems_from_excel()
-        self.task_5 = None
-        self.all_tasks = [self.task_1, self.task_2, self.task_3, self.task_4]
+        self.dict_of_tasks = {}
+        for num_task in range(1, 26 + 1):
+            self.dict_of_tasks[f'task_{num_task}'] = handlers.excel_handler.get_tasks_problems_from_excel(num_task)
 
     def get_user_location(self):
         return self.location
 
-    def get_dict_of_task(self, type, num):
-        return self.all_tasks[type - 1][num]
+    def get_dict_of_task(self, type_of_task, num):
+        return self.dict_of_tasks[f'task_{type_of_task}'][num]
 
     def set_user_location(self, location: str):
         self.location = location
 
-    def get_num_of_current_tasks(self, type: int):
-        return self.nums_of_current_tasks[f'task_{type}']
+    def get_num_of_current_tasks(self, type_of_task: int):
+        return self.nums_of_current_tasks[f'task_{type_of_task}']
 
     def get_status_of_subscription(self):
         return self.subscription
@@ -38,31 +35,26 @@ class User:
 
     def change_num_of_current_task_for_user(self, type_task: int, step: int):
         self.nums_of_current_tasks[f'task_{type_task}'] = \
-            abs(self.nums_of_current_tasks[f'task_{type_task}'] + step) % len(self.all_tasks[type_task - 1])
+            abs(self.nums_of_current_tasks[f'task_{type_task}'] + step) % \
+            len(self.dict_of_tasks[f'task_{type_task}'])
 
     def check_correct_answer(self, type_task: int, input_word: str):
-        if type_task == 1:
-            input_word = input_word.strip().lower()
-            return input_word in self.get_task_json(type_task=1)['correct_answers'].split()
         if type_task == 4:
             return input_word in self.get_task_json(type_task=4)['correct_word']
+        else:
+            input_word = input_word.strip().lower()
+            return input_word in self.get_task_json(type_task=1)['correct_answers'].split()
 
     def set_new_tasks_in_keyboard_for_user(self):
-        self.task_1 = handlers.excel_handler.get_tasks_1_problems_from_excel()
-        self.task_2 = None
-        self.task_3 = None
-        self.task_4 = handlers.excel_handler.get_tasks_4_problems_from_excel()
-        self.all_tasks = [self.task_1, self.task_2, self.task_3, self.task_4]
+        pass
 
     def give_task_for_user_in_text(self, type_task: int):
-        if type_task == 1:
-            task = self.get_task_json(type_task=type_task)
-            num_in_column = task['num_in_column']
-            description = task['description']
-            text_of_task = task['text_of_task']
-            text = 'Номер #' + num_in_column + "\n\n" + description \
-                   + "\n\n" + text_of_task
-            return text
+        task = self.get_task_json(type_task=type_task)
+        num_in_column = task['num_in_column']
+        description = task['description']
+        text_of_task = task['text_of_task']
+        text = 'Номер #' + num_in_column + "\n\n" + description + "\n\n" + text_of_task
+        return text
 
     def save_all_current_data_in_db(self):
         connection = sqlite3.connect('handlers\\users_data\\current_users_data.db')
@@ -108,5 +100,5 @@ class User:
 
     def get_task_json(self, type_task: int):
         num_of_current_task = self.nums_of_current_tasks[f'task_{type_task}']
-        task_json = self.all_tasks[type_task - 1][num_of_current_task]
+        task_json = self.dict_of_tasks[f'task_{type_task}'][num_of_current_task]
         return task_json

@@ -2,6 +2,7 @@ import sqlite3
 import users
 from pprint import pprint
 
+def get_stat_from 
 
 def get_users_class_data_from_db():
     conn = sqlite3.connect('handlers\\users_data\\current_users_data.db')
