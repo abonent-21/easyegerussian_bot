@@ -1,9 +1,9 @@
 import sqlite3
 
-db = sqlite3.connect('handlers\\users_data\\current_users_data.db')
+db = sqlite3.connect('handlers\\users_data\\users.db')
 sql = db.cursor()
 
-sql.execute("""CREATE TABLE IF NOT EXISTS users_tasks (
+sql.execute("""CREATE TABLE IF NOT EXISTS users_solved_task (
   user_id INTEGER,
   task_1 INTEGER,
   task_2 INTEGER,

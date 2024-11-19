@@ -4,23 +4,23 @@ from os.path import abspath
 
 
 def get_users_class_data_from_db():
-    conn = sqlite3.connect('handlers/users_data/current_users_data.db')
+    conn = sqlite3.connect('handlers/users_data/current_users_data.db', timeout=7)
     cur = conn.cursor()
     cur.execute("""SELECT * FROM users_location""")
     data = cur.fetchall()
     users_dict = {}
     for user in data:
         user_id = user[0]
-        chat_user_id = user[1]
+        login= user[1]
         location = user[2]
-        users_dict[user_id] = users.User(user_id=user_id, chat_id=chat_user_id, location=location)
+        users_dict[user_id] = users.User(user_id=user_id, user_login=login, location=location)
     conn.commit()
     conn.close()
     return users_dict
 
 
 def get_from_db_current_num_of_user_task(user_id: int):
-    conn = sqlite3.connect('handlers/users_data/current_users_data.db')
+    conn = sqlite3.connect('handlers/users_data/current_users_data.db', timeout=7)
     cur = conn.cursor()
     cur.execute("""SELECT * FROM users_tasks WHERE user_id = ?""", (user_id,))
     data = cur.fetchall()
@@ -39,8 +39,8 @@ def get_from_db_current_num_of_user_task(user_id: int):
     return nums_of_current_tasks
 
 
-def get_from_db_status_of_subscription(user_id):
-    conn = sqlite3.connect('handlers/users_data/users.db')
+def get_from_db_status_of_subscription(user_id): 
+    conn = sqlite3.connect('handlers/users_data/users.db', timeout=7)
     cur = conn.cursor()
     cur.execute("""SELECT * FROM users_subscription WHERE user_id = ?""", (user_id,))
     data = cur.fetchall()
@@ -54,4 +54,15 @@ def get_from_db_status_of_subscription(user_id):
     else:
         subscription = {'status': False, 'time_start': None, 'time_exp': None}
     print(subscription)
+    conn.commit()
+    conn.close()
     return subscription
+
+def get_login_of_users():
+    conn = sqlite3.connect('handlers/users_data/current_users_data.db', timeout=7)
+    cur = conn.cursor()
+    cur.execute("""SELECT user_login FROM users_location""")
+    data = cur.fetchall()[0]
+    conn.commit()
+    conn.close()
+    return data

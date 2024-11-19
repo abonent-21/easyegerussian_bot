@@ -21,7 +21,7 @@ def additional_information():
     kb = [
         [k_button('Статистика')],
         [k_button('Подписка'), k_button('Статус подписки')],
-        ['Вернуться 👈']
+        [k_button('Вернуться 👈')]
 
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
@@ -30,15 +30,15 @@ def additional_information():
 
 def price_list_of_sub():
     kb = types.InlineKeyboardMarkup(row_width=1)
-    kb.add(types.InlineKeyboardButton(text=f'Пробная на 1 день',
+    kb.add(types.InlineKeyboardButton(text=f'На 3 дня (бесплатно)',
                                       callback_data=f'subscription_trial'))
-    kb.add(types.InlineKeyboardButton(text=f'На неделю 49 р',
+    kb.add(types.InlineKeyboardButton(text=f'На неделю  49 р',
                                       callback_data=f'subscription_week') )
-    kb.add(types.InlineKeyboardButton(text=f'На месяц 99 р',
+    kb.add(types.InlineKeyboardButton(text=f'На месяц   139 р',
                                       callback_data=f'subscription_month'))
-    kb.add(types.InlineKeyboardButton(text=f'На полгода 399 р',
+    kb.add(types.InlineKeyboardButton(text=f'На полгода 499 р',
                                       callback_data=f'subscription_half_year'))
-    kb.add(types.InlineKeyboardButton(text=f'На год 599 р',
+    kb.add(types.InlineKeyboardButton(text=f'На год     599 р',
                                       callback_data=f'subscription_year'))
     return kb
 
@@ -77,79 +77,82 @@ def task_4_keyboard(user: User):
     return keyboard
 
 
-def list_of_student_task(type_kb='kb_solve_1_5'):
-    kb_1_5 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(1, 6):
-        kb_1_5.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
-    kb_1_5.row(types.InlineKeyboardButton(text='➡️', callback_data='kb_solve_6_11'))
+def list_of_student_task(type_kb='kb_solve_1_6'):
+    kb_1_6 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(1, 6 + 1):
+        kb_1_6.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
+    kb_1_6.row(types.InlineKeyboardButton(text='➡️', callback_data='kb_solve_7_12'))
 
-    kb_6_11 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(6, 12):
-        kb_6_11.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
-    kb_6_11.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_solve_1_5'),
-                types.InlineKeyboardButton(text='➡️', callback_data='kb_solve_16_21'))
+    kb_7_12 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(7, 12 + 1):
+        kb_7_12.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
+    kb_7_12.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_solve_1_6'),
+                types.InlineKeyboardButton(text='➡️', callback_data='kb_solve_13_18'))
 
-    kb_16_21 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(16, 22):
-        kb_16_21.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
-    kb_16_21.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_solve_6_11'),
-                 types.InlineKeyboardButton(text='➡️', callback_data='kb_solve_22_26'))
+    kb_13_18 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(13, 18 + 1):
+        kb_13_18.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
+    kb_13_18.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_solve_7_12'),
+                 types.InlineKeyboardButton(text='➡️', callback_data='kb_solve_19_26'))
 
-    kb_22_26 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(22, 27):
-        kb_22_26.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
-    kb_22_26.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_solve_16_21'))
+    kb_19_26 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(19, 26 + 1):
+        kb_19_26.add(types.InlineKeyboardButton(text=f'Задание {i}', callback_data=f'solve_task_{i}'))
+    kb_19_26.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_solve_13_18'))
 
-    if type_kb == "kb_solve_1_5":
-        return kb_1_5
-    elif type_kb == "kb_solve_6_11":
-        return kb_6_11
-    elif type_kb == "kb_solve_16_21":
-        return kb_16_21
-    elif type_kb == "kb_solve_22_26":
-        return kb_22_26
+    if type_kb == "kb_solve_1_6":
+        return kb_1_6
+    elif type_kb == "kb_solve_7_12":
+        return kb_7_12
+    elif type_kb == "kb_solve_13_18":
+        return kb_13_18
+    elif type_kb == "kb_solve_19_26":
+        return kb_19_26
 
 
 # /////////////////////////////////ADMIN KEYBOARDS///////////////////////////////////////////////////////
 
 def start_admin_keybord():
-    kb = [[k_button('Добавить задание'), k_button('Забанить'), k_button('Объявления')],
-          [k_button('Вернуться 👈')]]
+    kb = [[k_button('Добавить файл'),
+            k_button('Забанить'),
+            k_button('Объявления')],
+            ['Вернуться 👈']]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return keyboard
 
 
-def task_admin_keyboard(type_kb='kb_edit_1_5'):
-    kb_1_5 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(1, 6):
-        kb_1_5.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
-    kb_1_5.row(types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_6_11'))
+def task_admin_keyboard(type_kb='kb_edit_1_6'):
+    kb_1_6 = types.InlineKeyboardMarkup(row_width=1)
+    kb_1_6.add(types.InlineKeyboardButton(text=f'Добавить/изменить теорию', callback_data=f'edit_theory.txt'))
+    for i in range(1, 6 + 1):
+        kb_1_6.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}.xlsx'))
+    kb_1_6.row(types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_7_12'))
 
-    kb_6_11 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(6, 12):
-        kb_6_11.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
-    kb_6_11.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_1_5'),
-                types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_16_21'))
+    kb_7_12 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(7, 12 + 1):
+        kb_7_12.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}.xlsx'))
+    kb_7_12.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_1_6'),
+                types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_13_18'))
 
-    kb_16_21 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(16, 22):
-        kb_16_21.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
-    kb_16_21.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_6_11'),
-                 types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_22_26'))
+    kb_13_18 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(13, 18 + 1):
+        kb_13_18.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}.xlsx'))
+    kb_13_18.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_7_12'),
+                 types.InlineKeyboardButton(text='➡️', callback_data='kb_edit_19_26'))
 
-    kb_22_26 = types.InlineKeyboardMarkup(row_width=1)
-    for i in range(22, 27):
-        kb_22_26.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}'))
-    kb_22_26.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_16_21'))
+    kb_19_26 = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(19, 26 + 1):
+        kb_19_26.add(types.InlineKeyboardButton(text=f'Добавить/изменить задание {i}', callback_data=f'edit_task_{i}.xlsx'))
+    kb_19_26.row(types.InlineKeyboardButton(text='⬅️', callback_data='kb_edit_13_18'))
 
-    if type_kb == "kb_edit_1_5":
-        return kb_1_5
-    elif type_kb == "kb_edit_6_11":
-        return kb_6_11
-    elif type_kb == "kb_edit_16_21":
-        return kb_16_21
-    elif type_kb == "kb_edit_22_26":
-        return kb_22_26
+    if type_kb == "kb_edit_1_6":
+        return kb_1_6
+    elif type_kb == "kb_edit_7_12":
+        return kb_7_12
+    elif type_kb == "kb_edit_13_18":
+        return kb_13_18
+    elif type_kb == "kb_edit_19_26":
+        return kb_19_26
 
 
 def yes_or_no_edit_file():
